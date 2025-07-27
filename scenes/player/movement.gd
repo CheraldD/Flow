@@ -4,7 +4,6 @@ extends CharacterBody2D
 @export var max_speed = 1000.0
 @export var acceleration = 40.0
 @export var friction = 37.0
-# Jump Velocity теперь определяет МАКСИМАЛЬНУЮ высоту прыжка
 @export var jump_velocity = -800.0 
 var gravity = 1000.0
 
@@ -14,7 +13,11 @@ var gravity = 1000.0
 
 # --- Переменные Камеры ---
 @export var camera_max_offset_x = 150.0
-@export var camera_lerp_speed = 25.0
+
+# скорость «разгона» и «торможения» камеры при смене направления
+@export var camera_input_smooth_speed = 6.0    
+# скорость смещения уже сглаженной цели камеры
+@export var camera_offset_smooth_speed = 100.0  
 
 # --- Переменные Тряски Камеры ---
 @export var landing_shake_strength = 5.0
@@ -28,98 +31,82 @@ var gravity = 1000.0
 # --- Отслеживающие переменные ---
 var was_in_air = false
 var current_shake_strength = 0.0
-
-
-func _ready():
-	# Настройки узлов Timer...
-	pass
+# отслеживаем «выход» камеры вперёд/назад
+var camera_target_direction = 0.0
 
 
 func _physics_process(delta):
-	# --- ИЗМЕНЕННЫЙ БЛОК: Гравитация и Переменный Прыжок ---
-	# Мы немного перестраиваем логику для лучшего контроля
-
-	# Если игрок отпускает кнопку прыжка в момент взлета, "обрубаем" скорость
+	# --- Прыжок и вариабельная гравитация ---
 	if Input.is_action_just_released("ui_accept") and velocity.y < 0:
-		# Мы не ставим скорость в 0, а просто сильно ее уменьшаем (например, вдвое),
-		# чтобы прыжок не прерывался слишком резко.
 		velocity.y *= 0.5
-		
-	# Применяем гравитацию
 	if velocity.y > 0:
 		velocity.y += gravity * fall_gravity_multiplier * delta
 	else:
 		velocity.y += gravity * jump_hang_gravity_multiplier * delta
-	# ------------------------------------
 
-	# --- Буферизация Прыжка ---
+	# --- Буферизация прыжка ---
 	if Input.is_action_just_pressed("ui_accept"):
 		jump_buffer_timer.start()
-
-	# --- Выполнение Прыжка ---
 	if not jump_buffer_timer.is_stopped() and is_on_floor():
 		velocity.y = jump_velocity
 		jump_buffer_timer.stop()
 
-	# --- Проверка Приземления для Тряски Камеры ---
+	# --- Тряска при приземлении ---
 	if is_on_floor() and was_in_air:
 		start_camera_shake(landing_shake_strength, landing_shake_duration)
 	was_in_air = not is_on_floor()
 
-	# --- Движение Влево-Вправо ---
+	# --- Управление персонажем ---
 	var direction = Input.get_axis("ui_left", "ui_right")
-	var current_acceleration = acceleration
-	if not is_on_floor():
-		current_acceleration *= air_control_factor
+	var effective_acc = acceleration if is_on_floor() else acceleration * air_control_factor
 
-	if direction:
-		velocity.x = move_toward(velocity.x, direction * max_speed, current_acceleration)
+
+	if direction != 0:
+		velocity.x = move_toward(velocity.x, direction * max_speed, effective_acc)
 	else:
 		velocity.x = move_toward(velocity.x, 0, friction)
-	
+
 	move_and_slide()
+	update_camera_target(direction, delta)
 	update_camera_offset(delta)
 
 
-# Эта функция вызывается в _physics_process
-func update_camera_offset(delta):
-	# Рассчитываем целевое смещение от скорости
-	var target_offset_x = - (velocity.x / max_speed) * camera_max_offset_x
-	
-	# Плавно двигаем текущее смещение к целевому.
-	# Это смещение будет комбинироваться со смещением от тряски в _process.
-	var final_offset_x = lerp(camera.offset.x, target_offset_x, camera_lerp_speed * delta)
-	
-	# Применяем итоговое смещение по X.
-	# Ось Y будет управляться только функцией тряски.
-	camera.offset.x = final_offset_x
+# сглаживаем цель камеры на основе входа игрока
+func update_camera_target(direction: float, delta: float) -> void:
+	# move_toward ведёт себя как реальное ускорение/торможение:
+	camera_target_direction = move_toward(
+		camera_target_direction,
+		direction,
+		camera_input_smooth_speed * delta
+	)
 
 
-# Эта функция запускает тряску
-func start_camera_shake(strength, duration):
-	self.current_shake_strength = strength
+# плавно смещаем камеру к цели
+func update_camera_offset(delta: float) -> void:
+	var desired_offset_x = -camera_target_direction * camera_max_offset_x
+	camera.offset.x = lerp(
+		camera.offset.x,
+		desired_offset_x,
+		camera_offset_smooth_speed * delta
+	)
+
+
+func start_camera_shake(strength: float, duration: float) -> void:
+	current_shake_strength = strength
 	camera_shake_timer.wait_time = duration
 	camera_shake_timer.start()
 
 
-# _process используется для визуальных эффектов, не зависящих от физики
-func _process(delta):
+func _process(delta: float) -> void:
 	if not camera_shake_timer.is_stopped():
-		# Если таймер тряски работает...
-		var random_offset_x = randf_range(-current_shake_strength, current_shake_strength)
-		var random_offset_y = randf_range(-current_shake_strength, current_shake_strength)
-		
-		# Прибавляем случайное смещение к камере.
-		# Это не перезапишет смещение от скорости, а добавится к нему.
-		camera.offset.x += random_offset_x
-		camera.offset.y = random_offset_y
+		camera.offset.x += randf_range(-current_shake_strength, current_shake_strength)
+		camera.offset.y = randf_range(-current_shake_strength, current_shake_strength)
 	else:
-		# Если таймер не работает, сбрасываем силу тряски...
-		self.current_shake_strength = 0.0
-		# ...и плавно возвращаем камеру в центр по оси Y.
-		camera.offset.y = lerp(camera.offset.y, 0.0, camera_lerp_speed * delta)
+		# плавно возвращаем Y-смещение на 0 после тряски
+		camera.offset.y = lerp(camera.offset.y, 0.0, camera_offset_smooth_speed * delta)
+		current_shake_strength = 0.0
 
-# Пустая функция для сигнала timeout от CameraShakeTimer
-# Ты должен подключить этот сигнал к этой функции в редакторе
-func _on_camera_shake_timer_timeout():
+
+func _on_CameraShakeTimer_timeout() -> void:
+	# здесь можно сделать дополнительную логику по завершению тряски
 	pass
