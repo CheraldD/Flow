@@ -10,6 +10,10 @@ size = Vector2(20, 16.8458)
 
 [node name="Player" parent="." instance=ExtResource("1_377w7")]
 position = Vector2(507, 436)
+acceleration = 47.0
+friction = 35.0
+camera_stiffness = 37.0
+camera_damping = 6.0
 
 [node name="Camera2D" type="Camera2D" parent="Player"]
 position = Vector2(-3.05176e-05, 0)
