@@ -1,0 +1,81 @@
+[gd_scene load_steps=4 format=3 uid="uid://b4ooh23yvkl48"]
+
+[ext_resource type="PackedScene" uid="uid://dxj6so6nvtube" path="res://scenes/player/player.tscn" id="1_377w7"]
+[ext_resource type="Texture2D" uid="uid://cjlmdtnk2x7d4" path="res://icon.svg" id="1_bovvr"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_bovvr"]
+size = Vector2(20, 16.8458)
+
+[node name="Level" type="StaticBody2D"]
+
+[node name="Player" parent="." instance=ExtResource("1_377w7")]
+position = Vector2(507, 436)
+
+[node name="Camera2D" type="Camera2D" parent="Player"]
+position = Vector2(-3.05176e-05, 0)
+scale = Vector2(0.268246, 0.523497)
+zoom = Vector2(0.265, 0.265)
+
+[node name="Floor" type="StaticBody2D" parent="."]
+position = Vector2(512, 648)
+scale = Vector2(79.0924, 3.20193)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Floor"]
+shape = SubResource("RectangleShape2D_bovvr")
+
+[node name="Sprite2D" type="Sprite2D" parent="Floor"]
+position = Vector2(-4.76837e-07, 0)
+scale = Vector2(0.155828, 0.131608)
+texture = ExtResource("1_bovvr")
+
+[node name="Floor2" type="StaticBody2D" parent="."]
+position = Vector2(2128, 384)
+scale = Vector2(79.0924, 3.20193)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Floor2"]
+shape = SubResource("RectangleShape2D_bovvr")
+
+[node name="Sprite2D" type="Sprite2D" parent="Floor2"]
+position = Vector2(-4.76837e-07, 0)
+scale = Vector2(0.155828, 0.131608)
+texture = ExtResource("1_bovvr")
+
+[node name="Floor3" type="StaticBody2D" parent="."]
+position = Vector2(-1448, 648)
+scale = Vector2(79.0924, 3.20193)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Floor3"]
+shape = SubResource("RectangleShape2D_bovvr")
+
+[node name="Sprite2D" type="Sprite2D" parent="Floor3"]
+position = Vector2(-4.76837e-07, 0)
+scale = Vector2(0.155828, 0.131608)
+texture = ExtResource("1_bovvr")
+
+[node name="Floor4" type="StaticBody2D" parent="."]
+position = Vector2(264, -16)
+scale = Vector2(79.0924, 3.20193)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Floor4"]
+shape = SubResource("RectangleShape2D_bovvr")
+
+[node name="Sprite2D" type="Sprite2D" parent="Floor4"]
+position = Vector2(-4.76837e-07, 0)
+scale = Vector2(0.155828, 0.131608)
+texture = ExtResource("1_bovvr")
+
+[node name="Test" type="Sprite2D" parent="."]
+position = Vector2(200, 552)
+texture = ExtResource("1_bovvr")
+
+[node name="Test2" type="Sprite2D" parent="."]
+position = Vector2(200, 424)
+texture = ExtResource("1_bovvr")
+
+[node name="Test3" type="Sprite2D" parent="."]
+position = Vector2(200, 296)
+texture = ExtResource("1_bovvr")
+
+[node name="Test4" type="Sprite2D" parent="."]
+position = Vector2(200, 168)
+texture = ExtResource("1_bovvr")

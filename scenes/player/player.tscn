@@ -1,0 +1,29 @@
+[gd_scene load_steps=4 format=3 uid="uid://dxj6so6nvtube"]
+
+[ext_resource type="Texture2D" uid="uid://cjlmdtnk2x7d4" path="res://icon.svg" id="1_8afob"]
+[ext_resource type="Script" uid="uid://7y4q20jeedwk" path="res://scenes/player/movement.gd" id="1_dovo2"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_dovo2"]
+size = Vector2(128, 128)
+
+[node name="Player" type="CharacterBody2D"]
+scale = Vector2(1.85, 1.85)
+script = ExtResource("1_dovo2")
+acceleration = 45.0
+landing_shake_strength = 7.0
+landing_shake_duration = 0.3
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_8afob")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_dovo2")
+
+[node name="JumpBufferTimer" type="Timer" parent="."]
+wait_time = 0.15
+one_shot = true
+
+[node name="CameraShakeTimer" type="Timer" parent="."]
+one_shot = true
+
+[connection signal="timeout" from="CameraShakeTimer" to="." method="_on_camera_shake_timer_timeout"]
